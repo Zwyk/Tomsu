@@ -27,6 +27,10 @@ namespace Tomsu
         public string seed = null;
         public List<string> WORDS;
 
+        public string RED_SQUARE = "🟥";
+        public string YELLOW_SQUARE = "🟨";
+        public string BLUE_SQUARE = "🟦";
+
         public bool Pause = false;
 
         public int TRIES = 6;
@@ -46,6 +50,8 @@ namespace Tomsu
         public int CurrentChar;
 
         public int Guess = 1;
+
+        public DateTime Start;
 
         public MainWindow()
         {
@@ -72,6 +78,8 @@ namespace Tomsu
                     Console.WriteLine(seed);
                     rand = new Random(seed.GetHashCode());
                 }
+
+                PlayButton.Content = "Next";
 
                 GameText.Focus();
 
@@ -116,6 +124,8 @@ namespace Tomsu
             SetupTryBoxes();
 
             RefreshCurrent();
+
+            Start = DateTime.Now;
         }
 
         private void GameText_KeyDown(object sender, KeyEventArgs e)
@@ -125,78 +135,72 @@ namespace Tomsu
             {
                 if (e.Key == Key.Enter)
                 {
-                    if (CurrentChar == Word.Length - 1 && CurrentTxt.Text != ".")
+                    string input = "";
+                    foreach (Border b in Boxes[CurrentTry])
                     {
-                        string input = "";
-                        foreach (Border b in Boxes[CurrentTry])
-                        {
-                            input += (b.Child as TextBlock).Text;
-                        }
+                        input += (b.Child as TextBlock).Text;
+                    }
 
-                        if (WORDS.Any(w => w == input))
+                    if (WORDS.Any(w => w == input))
+                    {
+                        Results.Add(new List<string>());
+                        string done = "";
+                        for (int i = 0; i < Word.Length; i++)
                         {
-                            Results.Add(new List<string>());
-                            string done = "";
-                            for (int i = 0; i < Word.Length; i++)
+                            char c = input[i];
+                            if (Word[i] == c)
                             {
-                                char c = input[i];
-                                if (Word[i] == c)
-                                {
-                                    CurrentGuess[i] = c;
-                                    Boxes[CurrentTry][i].Background = new SolidColorBrush(Color.FromRgb(231, 0, 42));
-                                    Results[CurrentTry].Add("🟥");
-                                }
-                                else if (Word.Count(ch => ch == c) > done.Count(ch => ch == c))
-                                {
-                                    Boxes[CurrentTry][i].Background = new SolidColorBrush(Color.FromRgb(255, 189, 0));
-                                    Results[CurrentTry].Add("🟨");
-                                }
-                                else
-                                {
-                                    Results[CurrentTry].Add("🟦");
-                                }
+                                CurrentGuess[i] = c;
+                                Boxes[CurrentTry][i].Background = new SolidColorBrush(Color.FromRgb(231, 0, 42));
+                                Results[CurrentTry].Add(RED_SQUARE);
                                 done += input[i];
-                            }
-
-                            if (new string(CurrentGuess) == Word)
-                            {
-                                Pause = true;
-                                string clip = "TOMSU <" + seed + "> #" + Guess;
-                                clip += Environment.NewLine;
-                                foreach (var t in Results)
-                                {
-                                    if(clip != "") clip += Environment.NewLine;
-                                    foreach (var r in t)
-                                    {
-                                        clip += r;
-                                    }
-                                }
-                                Clipboard.SetText(clip);
                             }
                             else
                             {
-                                if (CurrentTry < TRIES - 1)
+                                Boxes[CurrentTry][i].Background = new SolidColorBrush(Color.FromRgb(0, 119, 199));
+                                Results[CurrentTry].Add(BLUE_SQUARE);
+                            }
+                        }
+                        for (int i = 0; i < Word.Length; i++)
+                        {
+                            char c = input[i];
+                            if (Word.Count(ch => ch == c) > done.Count(ch => ch == c) && CurrentGuess[i] != c)
+                            {
+                                Boxes[CurrentTry][i].Background = new SolidColorBrush(Color.FromRgb(255, 189, 0));
+                                Results[CurrentTry][i] = YELLOW_SQUARE;
+                            }
+                        }
+
+                        if (new string(CurrentGuess) == Word)
+                        {
+                            Pause = true;
+                            ClipRes(true);
+                        }
+                        else
+                        {
+                            if (CurrentTry < TRIES - 1)
+                            {
+                                NextTry();
+                            }
+                            else
+                            {
+                                Boxes.Add(new List<Border>());
+
+                                ClipRes(false);
+
+                                for (int j = 0; j < Word.Length; j++)
                                 {
-                                    NextTry();
-                                }
-                                else
-                                {
-                                    Boxes.Add(new List<Border>());
+                                    Border copy = Copy(BoxTemplate) as Border;
+                                    Thickness t = copy.Margin;
+                                    t.Left += (BoxTemplate.Width - 1) * j;
+                                    t.Top += (BoxTemplate.Width - 1) * (TRIES + 1);
+                                    copy.Margin = t;
 
-                                    for (int j = 0; j < Word.Length; j++)
-                                    {
-                                        Border copy = Copy(BoxTemplate) as Border;
-                                        Thickness t = copy.Margin;
-                                        t.Left += (BoxTemplate.Width - 1) * j;
-                                        t.Top += (BoxTemplate.Width - 1) * (TRIES + 1);
-                                        copy.Margin = t;
+                                    copy.Background = new SolidColorBrush(Color.FromRgb(231, 0, 42));
+                                    (copy.Child as TextBlock).Text = Word[j].ToString();
 
-                                        copy.Background = new SolidColorBrush(Color.FromRgb(231, 0, 42));
-                                        (copy.Child as TextBlock).Text = Word[j].ToString();
-
-                                        Main.Children.Add(copy);
-                                        Boxes[TRIES].Add(copy);
-                                    }
+                                    Main.Children.Add(copy);
+                                    Boxes[TRIES].Add(copy);
                                 }
                             }
                         }
@@ -214,6 +218,14 @@ namespace Tomsu
                         NextChar(true);
                     }
                 }
+                else if (e.Key == Key.Left)
+                {
+                    NextChar(true);
+                }
+                else if (e.Key == Key.Right)
+                {
+                    NextChar();
+                }
                 else
                 {
                     string c = e.Key == Key.Space ? " " : e.Key.ToString().ToUpper();
@@ -229,6 +241,26 @@ namespace Tomsu
             {
                 Play();
             }
+        }
+
+        private void ClipRes(bool won = true)
+        {
+            string clip = "TOMSU <" + seed + "> #" + Guess;
+            clip += Environment.NewLine;
+            foreach (var t in Results)
+            {
+                if (clip != "") clip += Environment.NewLine;
+                foreach (var r in t)
+                {
+                    clip += r;
+                }
+            }
+            clip += Environment.NewLine;
+            clip += (won ? "SUCCESS " + CurrentTry + "/6" : "FAILED") + " in " + TimeSpanToStr(DateTime.Now - Start);
+            clip += Environment.NewLine;
+            clip += Environment.NewLine;
+            clip += @"https://github.com/Zwyk/Tomsu/releases/download/v1/Tomsu.zip";
+            Clipboard.SetText(clip);
         }
 
         private void NextChar(bool back = false)
@@ -301,6 +333,14 @@ namespace Tomsu
             }
         }
 
+        private string TimeSpanToStr(TimeSpan time)
+        {
+            int h = (int)time.TotalHours;
+            int m = time.Minutes;
+            int s = time.Seconds;
+            return (h > 0 ? string.Format("{0}h", h) : "") + (h > 0 || m > 0 ? string.Format("{0}m", m) : "") + string.Format("{0}s", s);
+        }
+
         private static UIElement Copy(UIElement toCopy)
         {
             return XamlReader.Parse(XamlWriter.Save(toCopy)) as UIElement;
@@ -325,7 +365,20 @@ namespace Tomsu
             }
             else if(e.Key == Key.Escape || e.Key == Key.Tab)
             {
+                Seed.Text = seed;
                 GameText.Focus();
+            }
+        }
+
+        private void Seed_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (Seed.Text == seed)
+            {
+                PlayButton.Content = "Next";
+            }
+            else
+            {
+                PlayButton.Content = "Play";
             }
         }
     }
