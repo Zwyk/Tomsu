@@ -31,6 +31,8 @@ namespace Tomsu
         public string YELLOW_SQUARE = "🟨";
         public string BLUE_SQUARE = "🟦";
 
+        public string DOWNLOAD = @"https://github.com/Zwyk/Tomsu/releases/latest/download/Tomsu.zip";
+
         public bool Pause = false;
 
         public int TRIES = 6;
@@ -68,7 +70,8 @@ namespace Tomsu
             {
                 if (Seed.Text != "")
                 {
-                    seed = Seed.Text;
+                    Seed.Text = Seed.Text.Trim();
+                    seed = Seed.Text.Trim();
                     rand = new Random(seed.GetHashCode());
                 }
                 else
@@ -84,12 +87,12 @@ namespace Tomsu
                 GameText.Focus();
 
                 Guess = 1;
-                GuessNb.Content = Guess;
+                GuessNb.Content = "#" + Guess;
             }
             else
             {
                 Guess++;
-                GuessNb.Content = Guess;
+                GuessNb.Content = "#" + Guess;
             }
 
             Pause = false;
@@ -168,6 +171,7 @@ namespace Tomsu
                             {
                                 Boxes[CurrentTry][i].Background = new SolidColorBrush(Color.FromRgb(255, 189, 0));
                                 Results[CurrentTry][i] = YELLOW_SQUARE;
+                                done += input[i];
                             }
                         }
 
@@ -256,10 +260,10 @@ namespace Tomsu
                 }
             }
             clip += Environment.NewLine;
-            clip += (won ? "SUCCESS " + CurrentTry + "/6" : "FAILED") + " in " + TimeSpanToStr(DateTime.Now - Start);
+            clip += (won ? "SUCCESS " + (CurrentTry+1) + "/6" : "FAILED") + " in " + TimeSpanToStr(DateTime.Now - Start);
             clip += Environment.NewLine;
             clip += Environment.NewLine;
-            clip += @"https://github.com/Zwyk/Tomsu/releases/download/v1/Tomsu.zip";
+            clip += DOWNLOAD;
             Clipboard.SetText(clip);
         }
 
