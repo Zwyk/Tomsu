@@ -5,15 +5,19 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Tomsu"
         mc:Ignorable="d"
-        Title="TOMSU" Height="450" Width="800" Background="#FF2E2E2E" IsTabStop="False" TabIndex="-2" MinWidth="800" MinHeight="450">
+        Title="TOMSU" Height="700" Width="600" Background="#FF2E2E2E" IsTabStop="False" TabIndex="-2" MinWidth="600" MinHeight="700">
 
     <Grid x:Name="Main">
+        <TextBox x:Name="GameText" PreviewKeyDown="GameText_KeyDown" HorizontalAlignment="Left" Height="20" Margin="-140,-55,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="120" IsTabStop="False" MaxLines="1" Opacity="0"/>
         <Border x:Name="BoxTemplate" BorderBrush="White" BorderThickness="1" HorizontalAlignment="Left" Height="40" Margin="100,40,0,0" VerticalAlignment="Top" Width="40" Background="#FF0077C7">
-            <TextBlock x:Name="TextTemplate" HorizontalAlignment="Center" TextWrapping="Wrap" VerticalAlignment="Center" Text="R" Margin="0" FontSize="24" Padding="0,0,0,6" FontWeight="Medium" Foreground="White"/>
+            <TextBlock x:Name="TextTemplate" HorizontalAlignment="Center" TextWrapping="Wrap" VerticalAlignment="Center" Text="R" Margin="0" FontSize="24" Padding="0,0,0,4" FontWeight="Medium" Foreground="White"/>
         </Border>
+        <Border x:Name="KeyBoxTemplate" BorderBrush="White" BorderThickness="1" HorizontalAlignment="Left" Height="40" Margin="60,0,0,200" VerticalAlignment="Bottom" Width="38" Background="#FF2E2E2E" CornerRadius="4">
+            <TextBlock x:Name="KeyTextTemplate" HorizontalAlignment="Center" TextWrapping="Wrap" VerticalAlignment="Center" Text="R" Margin="0" FontSize="18" Padding="0,0,0,3" Foreground="White"/>
+        </Border>
+        <Label x:Name="GuessNb" Content="#1" HorizontalAlignment="Left" Margin="10,0,0,30" VerticalAlignment="Bottom" Foreground="White" FontSize="18"/>
         <Button x:Name="PlayButton" Content="PLAY" HorizontalAlignment="Left" Margin="10" VerticalAlignment="Bottom" Width="75" Click="PlayButton_Click" IsTabStop="False" Focusable="False"/>
         <TextBox x:Name="Seed" PreviewKeyDown="Seed_PreviewKeyDown" HorizontalAlignment="Left" Height="20" Margin="100,10,10,10" TextWrapping="Wrap" Text="" VerticalAlignment="Bottom" Width="120" IsTabStop="False" MaxLines="1" TextChanged="Seed_TextChanged"/>
-        <TextBox x:Name="GameText" PreviewKeyDown="GameText_KeyDown" HorizontalAlignment="Left" Height="20" Margin="-140,-55,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="120" IsTabStop="False" MaxLines="1" Opacity="0"/>
-        <Label x:Name="GuessNb" Content="n°1" HorizontalAlignment="Left" Margin="10,350,0,0" VerticalAlignment="Top" Foreground="White" FontSize="18"/>
+        <Button x:Name="ShareButton" Content="Clipboard" HorizontalAlignment="Left" Margin="235,10,10,10" VerticalAlignment="Bottom" Width="60" Click="ShareButton_Click" IsTabStop="False" Focusable="False"/>
     </Grid>
 </Window>

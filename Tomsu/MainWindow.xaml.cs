@@ -37,6 +37,8 @@ namespace Tomsu
 
         public int TRIES = 6;
 
+        public Dictionary<char, Border> Keys = null;
+
         public List<List<Border>> Boxes = null;
         public List<List<string>> Results = null;
 
@@ -61,6 +63,10 @@ namespace Tomsu
 
             WORDS = LoadWords();
 
+            LoadKeyBoard();
+
+            //Console.WriteLine(SearchSeed("PATOUNE"));
+
             Play();
         }
 
@@ -78,7 +84,7 @@ namespace Tomsu
                 {
                     Seed.Text = Math.Abs(Guid.NewGuid().GetHashCode()).ToString();
                     seed = Seed.Text;
-                    Console.WriteLine(seed);
+                    //Console.WriteLine(seed);
                     rand = new Random(seed.GetHashCode());
                 }
 
@@ -116,6 +122,13 @@ namespace Tomsu
             CurrentGuess[0] = FirstLetter;
             for (int i = 1; i < Word.Length; i++) CurrentGuess[i] = '.';
 
+            foreach(Border b in Keys.Values)
+            {
+                b.BorderBrush = KeyBoxTemplate.BorderBrush;
+                b.Background = KeyBoxTemplate.Background;
+                (b.Child as TextBlock).Foreground = KeyTextTemplate.Foreground;
+            }
+
             Boxes = new List<List<Border>>();
             CreateGameGrid(Word.Length);
 
@@ -126,9 +139,27 @@ namespace Tomsu
 
             SetupTryBoxes();
 
+            EnableShareButton(false);
+
             RefreshCurrent();
 
             Start = DateTime.Now;
+        }
+
+        private void LoadKeyBoard()
+        {
+            string L1 = "AZERTYUIOP";
+            string L2 = "QSDFGHJKLM";
+            string L3 = "WXCVBN";
+
+            Main.Children.Remove(KeyBoxTemplate);
+            KeyTextTemplate.Text = "";
+
+            Keys = new Dictionary<char, Border>();
+
+            CreateKeys(L1, 0);
+            CreateKeys(L2, 1);
+            CreateKeys(L3, 2);
         }
 
         private void GameText_KeyDown(object sender, KeyEventArgs e)
@@ -154,12 +185,22 @@ namespace Tomsu
                             if (Word[i] == c)
                             {
                                 CurrentGuess[i] = c;
+                                Keys[c].Background = new SolidColorBrush(Color.FromRgb(231, 0, 42));
                                 Boxes[CurrentTry][i].Background = new SolidColorBrush(Color.FromRgb(231, 0, 42));
                                 Results[CurrentTry].Add(RED_SQUARE);
                                 done += input[i];
                             }
                             else
                             {
+                                if (!Word.Contains(c))
+                                {
+                                    Keys[c].BorderBrush = new SolidColorBrush(Color.FromRgb(81, 81, 81));
+                                    (Keys[c].Child as TextBlock).Foreground = new SolidColorBrush(Color.FromRgb(81, 81, 81));
+                                }
+                                else if(!CurrentGuess.Contains(c))
+                                {
+                                    Keys[c].Background = new SolidColorBrush(Color.FromRgb(255, 189, 0));
+                                }
                                 Boxes[CurrentTry][i].Background = new SolidColorBrush(Color.FromRgb(0, 119, 199));
                                 Results[CurrentTry].Add(BLUE_SQUARE);
                             }
@@ -178,7 +219,7 @@ namespace Tomsu
                         if (new string(CurrentGuess) == Word)
                         {
                             Pause = true;
-                            ClipRes(true);
+                            EnableShareButton(true);
                         }
                         else
                         {
@@ -190,7 +231,7 @@ namespace Tomsu
                             {
                                 Boxes.Add(new List<Border>());
 
-                                ClipRes(false);
+                                EnableShareButton(true);
 
                                 for (int j = 0; j < Word.Length; j++)
                                 {
@@ -222,6 +263,10 @@ namespace Tomsu
                         NextChar(true);
                     }
                 }
+                else if (e.Key == Key.Delete)
+                {
+                    CurrentTxt.Text = '.'.ToString();
+                }
                 else if (e.Key == Key.Left)
                 {
                     NextChar(true);
@@ -244,6 +289,24 @@ namespace Tomsu
             else if (e.Key == Key.Enter)
             {
                 Play();
+            }
+        }
+
+        private string SearchSeed(string search)
+        {
+            string word;
+            string seed;
+            int i = 0;
+            while(true)
+            {
+                seed = i.ToString();
+                rand = new Random(seed.GetHashCode());
+                word = WORDS[rand.Next(WORDS.Count)];
+                if(word == search)
+                {
+                    return seed.ToString();
+                }
+                i++;
             }
         }
 
@@ -337,6 +400,36 @@ namespace Tomsu
             }
         }
 
+        private void CreateKeys(string chars, int line, double spacing = 4)
+        {
+            double lineGap = 0;
+            if (line == 1) lineGap = (int)(KeyBoxTemplate.Width / 4);
+            if (line == 2) lineGap = (int)(KeyBoxTemplate.Width * 3 / 4);
+
+            int i = 0;
+            foreach (char c in chars)
+            {
+                Border copy = Copy(KeyBoxTemplate) as Border;
+                Thickness t = copy.Margin;
+                t.Left += (KeyBoxTemplate.Width - 1) * i + spacing * (i - 1) + lineGap;
+                t.Bottom -= (KeyBoxTemplate.Height - 1 + spacing) * line;
+                copy.Margin = t;
+
+                (copy.Child as TextBlock).Text = c.ToString();
+
+                Main.Children.Add(copy);
+
+                Keys.Add(c, copy);
+                i++;
+            }
+        }
+
+        private void EnableShareButton(bool enabled = true)
+        {
+            ShareButton.IsEnabled = enabled;
+            ShareButton.Opacity = enabled ? 1 : 0;
+        }
+
         private string TimeSpanToStr(TimeSpan time)
         {
             int h = (int)time.TotalHours;
@@ -359,6 +452,11 @@ namespace Tomsu
         private void PlayButton_Click(object sender, RoutedEventArgs e)
         {
             Play();
+        }
+
+        private void ShareButton_Click(object sender, RoutedEventArgs e)
+        {
+            ClipRes(new string(CurrentGuess) == Word);
         }
 
         private void Seed_PreviewKeyDown(object sender, KeyEventArgs e)
